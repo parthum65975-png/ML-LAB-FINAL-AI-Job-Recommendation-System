@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Recommendation System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── HERO HEADER ── */
+        .hero {
+            background: linear-gradient(135deg, #1a0533 0%, #0d1b4b 50%, #1a0533 100%);
+            padding: 50px 20px 40px;
+            text-align: center;
+            border-bottom: 1px solid #2a1a4a;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(138,43,226,0.15) 0%, transparent 70%);
+            top: -200px; left: 50%; transform: translateX(-50%);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(138,43,226,0.2);
+            border: 1px solid rgba(138,43,226,0.5);
+            color: #b57bee;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, #b57bee, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            color: rgba(255,255,255,0.5);
+            font-size: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: #12121f;
+            border: 1px solid #2a2a4a;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #7c3aed, #a855f7, #7c3aed);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #c084fc;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ── INPUT ── */
+        textarea {
+            width: 100%;
+            background: #0d0d1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 14px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            resize: vertical;
+            font-family: 'Segoe UI', sans-serif;
+            transition: border 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+        }
+
+        textarea::placeholder { color: #444466; }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #8888aa;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group { margin-bottom: 20px; }
+
+        /* ── DIVIDER ── */
+        .divider {
+            text-align: center;
+            color: #444466;
+            margin: 18px 0;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%; width: 44%;
+            height: 1px;
+            background: #2a2a4a;
+        }
+
+        .divider::before { left: 0; }
+        .divider::after  { right: 0; }
+
+        /* ── UPLOAD ── */
+        .upload-area {
+            border: 2px dashed #2a2a4a;
+            border-radius: 12px;
+            padding: 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #7c3aed;
+            background: rgba(124,58,237,0.05);
+        }
+
+        .upload-area input {
+            position: absolute;
+            inset: 0; opacity: 0;
+            cursor: pointer; width: 100%;
+        }
+
+        .upload-icon { font-size: 2.2rem; margin-bottom: 10px; }
+        .upload-text { color: #a855f7; font-weight: 600; font-size: 0.95rem; }
+        .upload-sub  { color: #444466; font-size: 0.82rem; margin-top: 5px; }
+        .file-name   { margin-top: 10px; color: #4ade80; font-weight: 600; font-size: 0.88rem; }
+
+        /* ── BUTTON ── */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #6d28d9, #9333ea);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124,58,237,0.4);
+        }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* ── ERROR ── */
+        .error-msg {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #f87171;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-top: 12px;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        /* ── LOADING ── */
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .loading-spinner {
+            width: 50px; height: 50px;
+            border: 3px solid #2a2a4a;
+            border-top-color: #a855f7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading p { color: #8888aa; font-size: 0.95rem; }
+
+        /* ── SKILLS TAGS ── */
+        .skills-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .tag {
+            background: rgba(124,58,237,0.15);
+            border: 1px solid rgba(124,58,237,0.4);
+            color: #c084fc;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        /* ── PREDICTIONS ── */
+        .predictions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .pred-card {
+            background: #0d0d1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            transition: border 0.3s;
+        }
+
+        .pred-card:hover { border-color: #7c3aed; }
+        .pred-card.best  { border-color: #a855f7; background: rgba(124,58,237,0.08); }
+
+        .pred-model {
+            font-size: 0.75rem;
+            color: #666688;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .pred-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #e0e0e0;
+        }
+
+        .pred-card.best .pred-value { color: #c084fc; }
+
+        .best-badge {
+            display: inline-block;
+            background: rgba(168,85,247,0.2);
+            color: #a855f7;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        /* ── ACCURACY CARDS ── */
+        .accuracy-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .acc-card {
+            background: #0d0d1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .acc-model-name {
+            font-size: 0.8rem;
+            color: #666688;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .acc-percent {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .acc-card.knn .acc-percent { color: #f87171; }
+        .acc-card.rf  .acc-percent { color: #34d399; }
+        .acc-card.ann .acc-percent { color: #a855f7; }
+
+        .progress-bar-bg {
+            background: #1a1a2e;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.5s ease;
+            width: 0%;
+        }
+
+        .acc-card.knn .progress-bar-fill { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .acc-card.rf  .progress-bar-fill { background: linear-gradient(90deg, #10b981, #34d399); }
+        .acc-card.ann .progress-bar-fill { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+
+        .acc-label {
+            font-size: 0.75rem;
+            color: #444466;
+            margin-top: 8px;
+        }
+
+        .improvement-banner {
+            background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(168,85,247,0.1));
+            border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .imp-left { color: #8888aa; font-size: 0.9rem; }
+        .imp-left strong { color: #c084fc; display: block; font-size: 1rem; margin-top: 3px; }
+        .imp-right { font-size: 1.8rem; font-weight: 800; color: #4ade80; }
+
+        /* ── JOB CARDS ── */
+        .job-card {
+            background: #0d0d1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .job-card:hover {
+            border-color: #7c3aed;
+            background: rgba(124,58,237,0.05);
+            transform: translateX(5px);
+        }
+
+        .job-left { display: flex; align-items: center; gap: 14px; }
+
+        .rank {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.9rem; color: white;
+            flex-shrink: 0;
+        }
+
+        .rank.gold   { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #000; }
+        .rank.silver { background: linear-gradient(135deg, #6b7280, #9ca3af); }
+        .rank.bronze { background: linear-gradient(135deg, #92400e, #b45309); }
+
+        .job-title { font-size: 1rem; font-weight: 700; color: #e0e0e0; margin-bottom: 5px; }
+        .job-meta  { font-size: 0.82rem; color: #555577; }
+        .job-meta span { margin-right: 12px; }
+
+        .match-pill {
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-weight: 800;
+            font-size: 1rem;
+            white-space: nowrap;
+        }
+
+        .match-pill.high   { background: rgba(74,222,128,0.15);  color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+        .match-pill.medium { background: rgba(251,191,36,0.15);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+        .match-pill.low    { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+
+        .results { display: none; }
+
+        @media (max-width: 600px) {
+            .predictions, .accuracy-cards { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- BACKGROUND CANVAS -->
+<canvas id="bgCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-badge">✦ AI Powered</div>
+    <h1>Job Recommendation System</h1>
+    <p>Upload your CV or enter skills — our AI models will find your perfect job match</p>
+</div>
+
+<div class="main">
+
+    <!-- INPUT CARD -->
+    <div class="card">
+        <div class="card-title"><span>📝</span> Enter Your Skills</div>
+
+        <div class="input-group">
+            <label>Type Skills Manually</label>
+            <textarea id="skillsInput" rows="3"
+                placeholder="e.g. python, sql, excel, communication, teamwork, leadership..."></textarea>
+        </div>
+
+        <div class="divider">OR</div>
+
+        <div class="input-group">
+            <label>Upload CV / Resume</label>
+            <div class="upload-area">
+                <input type="file" id="cvFile" accept=".pdf,.docx,.txt">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Click to upload your CV</div>
+                <div class="upload-sub">Supports PDF, DOCX, TXT</div>
+                <div class="file-name" id="fileName"></div>
+            </div>
+        </div>
+
+        <button class="btn" onclick="getRecommendations()" id="submitBtn">
+            🚀 Analyze & Get Recommendations
+        </button>
+        <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Analyzing your skills with AI models...</p>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results" id="results">
+
+        <div class="card">
+            <div class="card-title"><span>🎯</span> Extracted Skills</div>
+            <div class="skills-tags" id="skillsTags"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span>🧠</span> Model Predictions</div>
+            <div class="predictions">
+                <div class="pred-card">
+                    <div class="pred-model">KNN Model</div>
+                    <div class="pred-value" id="knnPred">-</div>
+                </div>
+                <div class="pred-card">
+                    <div class="pred-model">Random Forest</div>
+                    <div class="pred-value" id="rfPred">-</div>
+                </div>
+                <div class="pred-card best">
+                    <div class="pred-model">ANN Model</div>
+                    <div class="pred-value" id="annPred">-</div>
+                    <div class="best-badge">⭐ Best Model</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span>📊</span> Model Accuracy Comparison</div>
+            <div class="accuracy-cards">
+                <div class="acc-card knn">
+                    <div class="acc-model-name">KNN</div>
+                    <div class="acc-percent">78.65%</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="knnBar"></div>
+                    </div>
+                    <div class="acc-label">K-Nearest Neighbors</div>
+                </div>
+                <div class="acc-card rf">
+                    <div class="acc-model-name">Random Forest</div>
+                    <div class="acc-percent">80.72%</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="rfBar"></div>
+                    </div>
+                    <div class="acc-label">Ensemble Method</div>
+                </div>
+                <div class="acc-card ann">
+                    <div class="acc-model-name">ANN</div>
+                    <div class="acc-percent">84.32%</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="annBar"></div>
+                    </div>
+                    <div class="acc-label">Neural Network ⭐</div>
+                </div>
+            </div>
+            <div class="improvement-banner">
+                <div class="imp-left">
+                    ANN vs Without ANN Average
+                    <strong>79.68% → 84.32%</strong>
+                </div>
+                <div class="imp-right">+4.63% 📈</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span>💼</span> Top Job Recommendations</div>
+            <div id="jobsList"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ── FLOATING ICONS ANIMATION ──
+const canvas = document.getElementById('bgCanvas');
+const ctx    = canvas.getContext('2d');
+
+canvas.width  = window.innerWidth;
+canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+
+const icons = ['💼','📊','🖥️','📈','🤖','📋','🎯','💡','🔍','📉','⚡','🧠','📌','🏆','💻'];
+
+const particles = Array.from({ length: 30 }, () => ({
+    x:            Math.random() * window.innerWidth,
+    y:            Math.random() * window.innerHeight,
+    icon:         icons[Math.floor(Math.random() * icons.length)],
+    size:         Math.random() * 20 + 10,
+    speedX:       (Math.random() - 0.5) * 0.35,
+    speedY:       (Math.random() - 0.5) * 0.35,
+    opacity:      Math.random() * 0.10 + 0.03,
+    rotation:     Math.random() * Math.PI * 2,
+    rotationSpeed:(Math.random() - 0.5) * 0.008,
+}));
+
+function animateBg() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.font        = `${p.size}px serif`;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.fillText(p.icon, -p.size / 2, p.size / 2);
+        ctx.restore();
+
+        p.x        += p.speedX;
+        p.y        += p.speedY;
+        p.rotation += p.rotationSpeed;
+
+        if (p.x < -50)                 p.x = canvas.width  + 50;
+        if (p.x > canvas.width  + 50)  p.x = -50;
+        if (p.y < -50)                 p.y = canvas.height + 50;
+        if (p.y > canvas.height + 50)  p.y = -50;
+    });
+    requestAnimationFrame(animateBg);
+}
+animateBg();
+
+// ── FILE NAME ──
+document.getElementById('cvFile').addEventListener('change', function() {
+    const name = this.files[0] ? this.files[0].name : '';
+    document.getElementById('fileName').textContent = name ? '✅ ' + name : '';
+});
+
+// ── MAIN FUNCTION ──
+async function getRecommendations() {
+    const skills   = document.getElementById('skillsInput').value.trim();
+    const cvFile   = document.getElementById('cvFile').files[0];
+    const errorMsg = document.getElementById('errorMsg');
+    const btn      = document.getElementById('submitBtn');
+
+    errorMsg.style.display = 'none';
+
+    if (!skills && !cvFile) {
+        errorMsg.textContent = '⚠️ Please enter skills or upload a CV!';
+        errorMsg.style.display = 'block';
+        return;
+    }
+
+    btn.disabled        = true;
+    btn.textContent     = '⏳ Analyzing...';
+    document.getElementById('loading').style.display  = 'block';
+    document.getElementById('results').style.display  = 'none';
+
+    try {
+        const formData = new FormData();
+        if (cvFile)  formData.append('cv', cvFile);
+        if (skills)  formData.append('skills', skills);
+
+        const res  = await fetch('/recommend', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.error) {
+            errorMsg.textContent  = '❌ ' + data.error;
+            errorMsg.style.display = 'block';
+        } else {
+            showResults(data);
+        }
+    } catch(e) {
+        errorMsg.textContent  = '❌ Server error! Make sure Flask is running.';
+        errorMsg.style.display = 'block';
+    }
+
+    btn.disabled    = false;
+    btn.textContent = '🚀 Analyze & Get Recommendations';
+    document.getElementById('loading').style.display = 'none';
+}
+
+function showResults(data) {
+    // Skills tags
+    document.getElementById('skillsTags').innerHTML =
+        data.extracted_skills.map(s => `<span class="tag">${s}</span>`).join('');
+
+    // Predictions
+    document.getElementById('knnPred').textContent = data.knn_prediction;
+    document.getElementById('rfPred').textContent  = data.rf_prediction;
+    document.getElementById('annPred').textContent = data.ann_prediction;
+
+    // Progress bars
+    setTimeout(() => {
+        document.getElementById('knnBar').style.width = '78.65%';
+        document.getElementById('rfBar').style.width  = '80.72%';
+        document.getElementById('annBar').style.width = '84.32%';
+    }, 300);
+
+    // Jobs
+    const ranks = ['gold','silver','bronze','',''];
+    document.getElementById('jobsList').innerHTML =
+        data.recommendations.map((job, i) => {
+            const mc = job.match >= 50 ? 'high' : job.match >= 25 ? 'medium' : 'low';
+            return `
+            <div class="job-card">
+                <div class="job-left">
+                    <div class="rank ${ranks[i]}">${i+1}</div>
+                    <div>
+                        <div class="job-title">💼 ${job.title}</div>
+                        <div class="job-meta">
+                            <span>🏢 ${job.company}</span>
+                            <span>📍 ${job.location}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="match-pill ${mc}">${job.match}% Match</div>
+            </div>`;
+        }).join('');
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
